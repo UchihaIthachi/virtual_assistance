@@ -1,0 +1,24 @@
+{
+  "metadata": {
+    "soundFile": "C:\\Users\\User\\Desktop\\practice\\digital-doppelganger-main\\dd-backend\\audios\\audio_0.wav",
+    "duration": 1.51
+  },
+  "mouthCues": [
+    { "start": 0.00, "end": 0.01, "value": "X" },
+    { "start": 0.01, "end": 0.12, "value": "B" },
+    { "start": 0.12, "end": 0.18, "value": "A" },
+    { "start": 0.18, "end": 0.23, "value": "B" },
+    { "start": 0.23, "end": 0.28, "value": "A" },
+    { "start": 0.28, "end": 0.44, "value": "D" },
+    { "start": 0.44, "end": 0.52, "value": "C" },
+    { "start": 0.52, "end": 0.60, "value": "A" },
+    { "start": 0.60, "end": 0.76, "value": "C" },
+    { "start": 0.76, "end": 0.83, "value": "E" },
+    { "start": 0.83, "end": 0.91, "value": "A" },
+    { "start": 0.91, "end": 1.01, "value": "C" },
+    { "start": 1.01, "end": 1.15, "value": "B" },
+    { "start": 1.15, "end": 1.29, "value": "D" },
+    { "start": 1.29, "end": 1.50, "value": "B" },
+    { "start": 1.50, "end": 1.51, "value": "X" }
+  ]
+}
