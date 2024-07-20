@@ -37,10 +37,22 @@ const FACIAL_EXPRESSIONS = [
 const elevenLabsApiKey = process.env.ELEVEN_LABS_API_KEY;
 const voiceID = "pNInz6obpgDQGcFmaJgB";
 const fileName = "audio.mp3";
-const textInput = "Hello, world";
 
-// Log to check if the API key is loaded
-console.log("ELEVEN_LABS_API_KEY:", elevenLabsApiKey);
+const HF_API_URL =
+  "https://api-inference.huggingface.co/models/mistralai/Mixtral-8x7B-Instruct-v0.1";
+const HF_API_TOKEN = process.env.HF_API_TOKEN;
+
+const system_instructions = `
+[SYSTEM] You are Harshana Lakshara's virtual assistant.
+Your task is to answer the question.
+Keep conversation very short, clear, and concise.
+Respond naturally and concisely to the user's queries.
+Respond in a normal, conversational manner while being friendly and helpful.
+The expectation is that you will avoid introductions and start answering the query directly. Only answer the question asked by the user. Do not say unnecessary things.
+Begin with a greeting if the user initiates the conversation.
+Avoid unnecessary introductions and answer the user's questions directly.
+Here is the user's query: [QUESTION]
+`;
 
 const app = express();
 app.use(express.json());
@@ -73,21 +85,10 @@ app.post("/chat", async (req, res) => {
       return;
     }
 
-    console.log("Sending message to Rasa server:", userMessage);
-
-    // Send message to Rasa and get the response
-    const rasaResponse = await axios.post(
-      "http://localhost:5005/webhooks/rest/webhook",
-      {
-        sender: "user",
-        message: userMessage,
-      }
-    );
-
-    console.log("Received response from Rasa server:", rasaResponse.data);
+    const rasaResponse = await getModelResponse(userMessage);
 
     const messages = await Promise.all(
-      rasaResponse.data.map(async (rasaMessage, index) => {
+      rasaResponse.map(async (rasaMessage, index) => {
         const message = {
           text: rasaMessage.text,
           facialExpression: "default",
@@ -104,7 +105,8 @@ app.post("/chat", async (req, res) => {
       })
     );
 
-    console.log("Sending response to frontend:", messages);
+    const logMessages = messages.map(({ audio, ...rest }) => rest);
+    console.log("Sending response to frontend:", logMessages);
     res.send({ messages });
   } catch (error) {
     console.log("Error:", error);
@@ -115,7 +117,6 @@ app.post("/chat", async (req, res) => {
       facialExpression: Math.random() < 0.5 ? "funnyFace" : "default",
       animation: "dance",
     };
-    // Create a copy of fallbackMessage without the audio attribute for logging
     const fallbackMessageLog = { ...fallbackMessage };
     delete fallbackMessageLog.audio;
 
@@ -124,15 +125,49 @@ app.post("/chat", async (req, res) => {
   }
 });
 
+const getModelResponse = async (userMessage) => {
+  const formattedPrompt = system_instructions.replace(
+    "[QUESTION]",
+    userMessage
+  );
+  const headers = {
+    Authorization: `Bearer ${HF_API_TOKEN}`,
+    "Content-Type": "application/json",
+  };
+
+  const body = JSON.stringify({
+    inputs: formattedPrompt,
+    parameters: {
+      max_new_tokens: 300,
+    },
+  });
+
+  try {
+    const response = await axios.post(HF_API_URL, body, { headers });
+    console.log("API response:", response.data);
+
+    if (response.data.length > 0 && response.data[0].generated_text) {
+      // Extract the response text after the user's query
+      const responseText = response.data[0].generated_text
+        .split("\n")
+        .slice(-1)[0]
+        .trim();
+      return [{ text: responseText }];
+    } else {
+      throw new Error("Invalid response structure");
+    }
+  } catch (error) {
+    console.error(
+      "Error in getModelResponse:",
+      error.response ? error.response.data : error.message
+    );
+    throw error;
+  }
+};
+
 const textToSpeech = async (textInput, index) => {
   const fileName = `audios/audio_${index}.mp3`;
   try {
-    console.log("textToSpeech parameters:", {
-      elevenLabsApiKey,
-      voiceID,
-      fileName,
-      textInput,
-    });
     await voice.textToSpeech(elevenLabsApiKey, voiceID, fileName, textInput);
     return await audioFileToBase64(fileName);
   } catch (error) {
@@ -147,15 +182,12 @@ ffmpeg.setFfmpegPath(path.join(__dirname, "ffmpeg", "bin", "ffmpeg.exe"));
 const lipSyncMessage = async (index) => {
   const mp3FileName = path.join(__dirname, `audios/audio_${index}.mp3`);
   const wavFileName = path.join(__dirname, `audios/audio_${index}.wav`);
-  const rhubarbPath = path.join(__dirname, "rhubarb-win", "rhubarb.exe"); // Adjust if necessary
+  const rhubarbPath = path.join(__dirname, "rhubarb-win", "rhubarb.exe");
   const fPath = path.join(__dirname, "ffmpeg", "bin", "ffmpeg.exe");
 
   try {
-    // Convert MP3 to WAV using fluent-ffmpeg
     console.log("Converting MP3 to WAV:", mp3FileName, wavFileName);
     await execCommand(`${fPath} -y -i ${mp3FileName} ${wavFileName}`);
-
-    // Perform lip sync operation using execCommand
     await execCommand(
       `${rhubarbPath} -f json -o audios/audio_${index}.json ${wavFileName} -r phonetic`
     );

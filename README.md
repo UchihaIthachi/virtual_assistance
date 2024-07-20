@@ -1,4 +1,4 @@
-# Virtual Assistant with 3D Animation and AI Chatbot
+# Virtual Hotel Assistant with 3D Animation and AI Chatbot
 
 This project implements a virtual assistant with 3D animation capabilities and an AI chatbot powered by Rasa. The assistant can process text input from users, generate audio responses using Eleven Labs for text-to-speech conversion, synchronize lip movements and facial expressions using Rhubarb, and animate responses using ThreeJS.
 
