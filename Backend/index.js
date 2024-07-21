@@ -9,12 +9,23 @@ import { fileURLToPath } from "url";
 import path from "path";
 import os from "os";
 import ffmpeg from "fluent-ffmpeg";
+import textToSpeech from "@google-cloud/text-to-speech";
 
 // Define __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config();
+
+let conversationHistory = [];
+
+const addMessageToHistory = (message) => {
+  conversationHistory.push(message);
+};
+
+const getConversationHistory = () => {
+  return conversationHistory;
+};
 
 const ANIMATIONS = [
   "idle",
@@ -42,18 +53,6 @@ const fileName = "audio.mp3";
 const HF_API_URL =
   "https://api-inference.huggingface.co/models/mistralai/Mixtral-8x7B-Instruct-v0.1";
 const HF_API_TOKEN = process.env.HF_API_TOKEN;
-
-const system_instructions = `
-[SYSTEM] You are Harshana Lakshara's virtual assistant.
-Your task is to answer the question.
-Keep conversation very short, clear, and concise.
-Respond naturally and concisely to the user's queries.
-Respond in a normal, conversational manner while being friendly and helpful.
-The expectation is that you will avoid introductions and start answering the query directly. Only answer the question asked by the user. Do not say unnecessary things.
-Begin with a greeting if the user initiates the conversation.
-Avoid unnecessary introductions and answer the user's questions directly.
-Here is the user's query: [QUESTION]
-`;
 
 const app = express();
 app.use(express.json());
@@ -86,7 +85,10 @@ app.post("/chat", async (req, res) => {
       return;
     }
 
-    const rasaResponse = await getModelResponse(userMessage);
+    const rasaResponse = await getModelResponse(
+      userMessage,
+      conversationHistory
+    );
 
     const messages = await Promise.all(
       rasaResponse.map(async (rasaMessage, index) => {
@@ -94,7 +96,7 @@ app.post("/chat", async (req, res) => {
           text: rasaMessage.text,
           facialExpression: "default",
           animation: "idle",
-          audio: await textToSpeech(rasaMessage.text, index),
+          audio: await generateSpeech(rasaMessage.text, index),
           lipsync: await lipSyncMessage(index),
         };
         console.log("Generated message:", {
@@ -126,8 +128,37 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-const getModelResponse = async (userMessage) => {
-  const formattedPrompt = system_instructions.replace(
+const getModelResponse = async (userMessage, history) => {
+  const details = await readDetailsFromJsonFile();
+  const contextWindow = history.slice(-5);
+
+  // Customize the system instructions with details from JSON
+  const personalizedInstructions = `
+  [SYSTEM] You are ${details.Name}, a ${details.Role}. 
+  Your task is to respond to user queries concisely and accurately.
+
+  1. **Greeting**: Begin with a friendly greeting if the user starts the conversation.
+  2. **Response**: 
+    - Provide clear, direct answers to the user's questions.
+    - Avoid unnecessary details and introductions.
+    - Use a conversational and friendly tone.
+  3. **Fallback**: 
+    - If you cannot understand or address the query, respond with the fallback message.
+    - Ask for clarification if needed.
+
+  Additional Context:
+  - **Birthday**: ${details.Birthday}
+  - **Occupation**: ${details.Occupation}
+  - **Hobbies**: ${details.Hobbies.join(", ")}
+  - **Favorite Language**: ${details.Favorite_language}
+
+  Recent conversation:
+  ${contextWindow.map((m) => `${m.role}: ${m.text}`).join("\n")}
+
+  Here is the user's query: [QUESTION]
+  `;
+
+  const formattedPrompt = personalizedInstructions.replace(
     "[QUESTION]",
     userMessage
   );
@@ -148,12 +179,16 @@ const getModelResponse = async (userMessage) => {
     console.log("API response:", response.data);
 
     if (response.data.length > 0 && response.data[0].generated_text) {
-      // Extract the response text after the user's query
-      const responseText = response.data[0].generated_text
+      // Extract and clean the response text
+      let responseText = response.data[0].generated_text
         .split("\n")
         .slice(-1)[0]
         .trim();
-      return [{ text: responseText }];
+
+      // Remove unwanted prefixes like "**Answer**:"
+      const cleanedText = responseText.replace(/^\*\*.*?\*\*:\s*/, "");
+
+      return [{ text: cleanedText }];
     } else {
       throw new Error("Invalid response structure");
     }
@@ -166,13 +201,30 @@ const getModelResponse = async (userMessage) => {
   }
 };
 
-const textToSpeech = async (textInput, index) => {
+// Initialize the Google Cloud Text-to-Speech client
+const client = new textToSpeech.TextToSpeechClient();
+
+const generateSpeech = async (textInput, index) => {
   const fileName = `audios/audio_${index}.mp3`;
+
   try {
-    await voice.textToSpeech(elevenLabsApiKey, voiceID, fileName, textInput);
+    // Construct the request
+    const request = {
+      input: { text: textInput },
+      voice: { languageCode: "en-US", ssmlGender: "MALE" }, // You can choose the voice gender and language code
+      audioConfig: { audioEncoding: "MP3" },
+    };
+
+    // Perform the Text-to-Speech request
+    const [response] = await client.synthesizeSpeech(request);
+
+    // Write the binary audio content to a file
+    await fs.writeFile(fileName, response.audioContent, "binary");
+
+    // Convert the audio file to Base64 and return it
     return await audioFileToBase64(fileName);
   } catch (error) {
-    console.log("Error in textToSpeech:", error);
+    console.log("Error in generateSpeech:", error);
     throw error;
   }
 };
@@ -232,6 +284,19 @@ const readJsonTranscript = async (file) => {
 const audioFileToBase64 = async (file) => {
   const data = await fs.readFile(file);
   return data.toString("base64");
+};
+
+const readDetailsFromJsonFile = async () => {
+  try {
+    const data = await fs.readFile(
+      path.join(__dirname, "details.json"),
+      "utf8"
+    );
+    return JSON.parse(data);
+  } catch (error) {
+    console.error("Error reading details:", error);
+    throw error;
+  }
 };
 
 app.listen(port, () => {
