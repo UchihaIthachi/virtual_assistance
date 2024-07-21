@@ -7,6 +7,7 @@ import axios from "axios";
 import voice from "elevenlabs-node";
 import { fileURLToPath } from "url";
 import path from "path";
+import os from "os";
 import ffmpeg from "fluent-ffmpeg";
 
 // Define __dirname
@@ -176,18 +177,25 @@ const textToSpeech = async (textInput, index) => {
   }
 };
 
+// Determine OS and set the path to ffmpeg and rhubarb executable accordingly
+const isWindows = os.platform() === "win32";
+const ffmpegPath = isWindows
+  ? path.join(__dirname, "ffmpeg-win", "bin", "ffmpeg.exe")
+  : path.join(__dirname, "ffmpeg", "bin", "ffmpeg");
+const rhubarbPath = isWindows
+  ? path.join(__dirname, "rhubarb-win", "rhubarb.exe")
+  : path.join(__dirname, "rhubarb");
+
 // Set the path to ffmpeg executable
-ffmpeg.setFfmpegPath(path.join(__dirname, "ffmpeg", "bin", "ffmpeg.exe"));
+ffmpeg.setFfmpegPath(ffmpegPath);
 
 const lipSyncMessage = async (index) => {
   const mp3FileName = path.join(__dirname, `audios/audio_${index}.mp3`);
   const wavFileName = path.join(__dirname, `audios/audio_${index}.wav`);
-  const rhubarbPath = path.join(__dirname, "rhubarb-win", "rhubarb.exe");
-  const fPath = path.join(__dirname, "ffmpeg", "bin", "ffmpeg.exe");
 
   try {
     console.log("Converting MP3 to WAV:", mp3FileName, wavFileName);
-    await execCommand(`${fPath} -y -i ${mp3FileName} ${wavFileName}`);
+    await execCommand(`${ffmpegPath} -y -i ${mp3FileName} ${wavFileName}`);
     await execCommand(
       `${rhubarbPath} -f json -o audios/audio_${index}.json ${wavFileName} -r phonetic`
     );
