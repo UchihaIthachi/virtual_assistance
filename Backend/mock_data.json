@@ -1,0 +1,22 @@
+
+[
+    {
+      "userMessage": "I'm really angry right now!",
+      "expectedEmotion": "sad",
+      "expectedFacialExpression": "sad",
+      "expectedAnimation": "cry"
+    },
+    {
+      "userMessage": "I'm so happy today!",
+      "expectedEmotion": "smile",
+      "expectedFacialExpression": "smile",
+      "expectedAnimation": "dance"
+    },
+    {
+      "userMessage": "This is very sad.",
+      "expectedEmotion": "sad",
+      "expectedFacialExpression": "sad",
+      "expectedAnimation": "cry"
+    }
+  ]
+  

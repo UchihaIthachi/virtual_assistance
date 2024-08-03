@@ -13,6 +13,7 @@
     "@ffmpeg/core": "^0.8.3",
     "@ffmpeg/ffmpeg": "^0.9.4",
     "@google-cloud/text-to-speech": "^5.3.0",
+    "@huggingface/inference": "^2.8.0",
     "axios": "^1.7.2",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",

@@ -10,6 +10,7 @@ import path from "path";
 import os from "os";
 import ffmpeg from "fluent-ffmpeg";
 import textToSpeech from "@google-cloud/text-to-speech";
+import { HfInference } from "@huggingface/inference";
 
 // Define __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -27,24 +28,25 @@ const getConversationHistory = () => {
   return conversationHistory;
 };
 
-const ANIMATIONS = [
-  "idle",
-  "happy",
-  "sad",
-  "loser",
-  "dance",
-  "loser",
-  "jump",
-  "kiss",
-];
-const FACIAL_EXPRESSIONS = [
-  "smile",
-  "sad",
-  "angry",
-  "surprised",
-  "funnyFace",
-  "default",
-];
+const ANIMATIONS = {
+  joy: "happy", // Map joy to happy animation
+  sadness: "sad", // Map sadness to sad animation
+  anger: "loser", // Use loser animation for anger
+  surprise: "jump", // Use jump animation for surprise
+  fear: "jump", // Use jump animation for fear (or adjust as needed)
+  disgust: "loser", // Use loser animation for disgust (or adjust as needed)
+  neutral: "idle", // Map neutral to idle animation
+};
+
+const FACIAL_EXPRESSIONS = {
+  joy: "smile",
+  sadness: "sad",
+  anger: "angry",
+  surprise: "surprised",
+  fear: "fearful",
+  disgust: "disgusted",
+  neutral: "default",
+};
 
 const elevenLabsApiKey = process.env.ELEVEN_LABS_API_KEY;
 const voiceID = "pNInz6obpgDQGcFmaJgB";
@@ -58,6 +60,12 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 const port = 3000;
+
+// Initialize the Google Cloud Text-to-Speech client
+const client = new textToSpeech.TextToSpeechClient();
+
+// Initialize the Hugging Face Inference client
+const hfInference = new HfInference(HF_API_TOKEN);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
@@ -74,7 +82,7 @@ app.post("/chat", async (req, res) => {
 
     if (!userMessage) {
       const responseMessage = {
-        text: `Hi! how's it going?`,
+        text: "Hi! how's it going?",
         audio: await audioFileToBase64("audios/intro.wav"),
         lipsync: await readJsonTranscript("audios/intro.json"),
         facialExpression: "smile",
@@ -92,10 +100,15 @@ app.post("/chat", async (req, res) => {
 
     const messages = await Promise.all(
       rasaResponse.map(async (rasaMessage, index) => {
+        // Determine emotion and corresponding facial expression and animation
+        const emotion = await getEmotion(rasaMessage.text);
+        const facialExpression = FACIAL_EXPRESSIONS[emotion] || "default";
+        const animation = ANIMATIONS[emotion] || "idle";
+
         const message = {
           text: rasaMessage.text,
-          facialExpression: "default",
-          animation: "idle",
+          facialExpression: facialExpression,
+          animation: animation,
           audio: await generateSpeech(rasaMessage.text, index),
           lipsync: await lipSyncMessage(index),
         };
@@ -158,17 +171,13 @@ const getModelResponse = async (userMessage, history) => {
   Here is the user's query: [QUESTION]
   `;
 
-  const formattedPrompt = personalizedInstructions.replace(
-    "[QUESTION]",
-    userMessage
-  );
   const headers = {
     Authorization: `Bearer ${HF_API_TOKEN}`,
     "Content-Type": "application/json",
   };
 
   const body = JSON.stringify({
-    inputs: formattedPrompt,
+    inputs: personalizedInstructions.replace("[QUESTION]", userMessage),
     parameters: {
       max_new_tokens: 300,
     },
@@ -179,13 +188,11 @@ const getModelResponse = async (userMessage, history) => {
     console.log("API response:", response.data);
 
     if (response.data.length > 0 && response.data[0].generated_text) {
-      // Extract and clean the response text
       let responseText = response.data[0].generated_text
         .split("\n")
         .slice(-1)[0]
         .trim();
 
-      // Remove unwanted prefixes like "**Answer**:"
       const cleanedText = responseText.replace(/^\*\*.*?\*\*:\s*/, "");
 
       return [{ text: cleanedText }];
@@ -201,8 +208,47 @@ const getModelResponse = async (userMessage, history) => {
   }
 };
 
-// Initialize the Google Cloud Text-to-Speech client
-const client = new textToSpeech.TextToSpeechClient();
+const getEmotion = async (text) => {
+  try {
+    // Split the text into sentences and take the first one
+    const firstSentence = text.split(/[.]/)[0];
+    console.log("First sentence:", firstSentence);
+
+    const response = await axios.post(
+      "https://api-inference.huggingface.co/models/michellejieli/emotion_text_classifier",
+      { inputs: firstSentence },
+      {
+        headers: {
+          Authorization: `Bearer ${HF_API_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("API response:", response.data); // Log the entire response data
+
+    // Check if the response data is in the expected format
+    if (
+      response.data &&
+      response.data.length > 0 &&
+      response.data[0].length > 0 &&
+      response.data[0][0].label
+    ) {
+      const emotionLabel = response.data[0][0].label.toLowerCase();
+      console.log("Emotion label:", emotionLabel); // Log the emotion label
+      return emotionLabel;
+    } else {
+      console.error("Unexpected API response format:", response.data);
+      return "neutral"; // Default to neutral if the response format is unexpected
+    }
+  } catch (error) {
+    console.error("Error in getEmotion:", error.message);
+    if (error.response) {
+      console.error("Error details:", error.response.data);
+    }
+    return "neutral"; // Default to neutral if there's an error
+  }
+};
 
 const generateSpeech = async (textInput, index) => {
   const fileName = `audios/audio_${index}.mp3`;
