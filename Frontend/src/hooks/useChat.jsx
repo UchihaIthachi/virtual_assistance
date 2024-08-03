@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 
-const backendUrl = 'https://virtualme-9c57113a97f2.herokuapp.com/'
+const backendUrl = 'https://virtualme-9c57113a97f2.herokuapp.com'
 
 const ChatContext = createContext()
 
