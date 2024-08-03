@@ -1,4 +1,7 @@
 {
+  "scripts": {
+  "build": "react-scripts build"
+},
   "name": "dd-frontend",
   "private": true,
   "version": "1.0.0",
