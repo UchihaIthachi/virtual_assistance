@@ -56,10 +56,10 @@ const HF_API_URL =
   "https://api-inference.huggingface.co/models/mistralai/Mixtral-8x7B-Instruct-v0.1";
 const HF_API_TOKEN = process.env.HF_API_TOKEN;
 
+const port = process.env.PORT || 3000;
 const app = express();
 app.use(express.json());
 app.use(cors());
-const port = 3000;
 
 // Initialize the Google Cloud Text-to-Speech client
 const client = new textToSpeech.TextToSpeechClient();
@@ -209,44 +209,61 @@ const getModelResponse = async (userMessage, history) => {
 };
 
 const getEmotion = async (text) => {
+  const maxRetries = 5;
+  const delay = 2000; // Delay in milliseconds
+
   try {
-    // Split the text into sentences and take the first one
     const firstSentence = text.split(/[.]/)[0];
     console.log("First sentence:", firstSentence);
 
-    const response = await axios.post(
-      "https://api-inference.huggingface.co/models/michellejieli/emotion_text_classifier",
-      { inputs: firstSentence },
-      {
-        headers: {
-          Authorization: `Bearer ${HF_API_TOKEN}`,
-          "Content-Type": "application/json",
-        },
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await axios.post(
+          "https://api-inference.huggingface.co/models/michellejieli/emotion_text_classifier",
+          { inputs: firstSentence },
+          {
+            headers: {
+              Authorization: `Bearer ${HF_API_TOKEN}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        console.log("API response:", response.data);
+
+        if (
+          response.data &&
+          response.data.length > 0 &&
+          response.data[0].length > 0 &&
+          response.data[0][0].label
+        ) {
+          const emotionLabel = response.data[0][0].label.toLowerCase();
+          console.log("Emotion label:", emotionLabel);
+          return emotionLabel;
+        } else {
+          console.error("Unexpected API response format:", response.data);
+          return "neutral";
+        }
+      } catch (error) {
+        if (error.response && error.response.status === 503) {
+          console.log(
+            `Model loading, retrying in ${delay}ms... (Attempt ${attempt}/${maxRetries})`
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        } else {
+          throw error;
+        }
       }
-    );
-
-    console.log("API response:", response.data); // Log the entire response data
-
-    // Check if the response data is in the expected format
-    if (
-      response.data &&
-      response.data.length > 0 &&
-      response.data[0].length > 0 &&
-      response.data[0][0].label
-    ) {
-      const emotionLabel = response.data[0][0].label.toLowerCase();
-      console.log("Emotion label:", emotionLabel); // Log the emotion label
-      return emotionLabel;
-    } else {
-      console.error("Unexpected API response format:", response.data);
-      return "neutral"; // Default to neutral if the response format is unexpected
     }
+
+    // If max retries are exhausted
+    return "neutral";
   } catch (error) {
     console.error("Error in getEmotion:", error.message);
     if (error.response) {
       console.error("Error details:", error.response.data);
     }
-    return "neutral"; // Default to neutral if there's an error
+    return "neutral";
   }
 };
 
