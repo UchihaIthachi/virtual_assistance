@@ -275,11 +275,22 @@ const generateSpeech = async (textInput, index) => {
   }
 };
 
-// Determine OS and set the path to ffmpeg and rhubarb executable accordingly
+// Determine the OS and set the path to the executables accordingly
 const isWindows = os.platform() === "win32";
-const ffmpegPath = "ffmpeg";
+let ffmpegPath;
+let rhubarbPath;
 
-// Set the path to ffmpeg executable
+if (isWindows) {
+  // Set paths for Windows environment
+  ffmpegPath = "C:\\usr\\local\\bin\\ffmpeg";
+  rhubarbPath = "C:\\usr\\local\\bin\\rhubarb";
+} else {
+  // Set paths for Linux/Unix environment
+  ffmpegPath = "/usr/local/bin/ffmpeg";
+  rhubarbPath = "/usr/local/bin/rhubarb";
+}
+
+// Set the path to the ffmpeg executable
 ffmpeg.setFfmpegPath(ffmpegPath);
 
 const lipSyncMessage = async (index) => {

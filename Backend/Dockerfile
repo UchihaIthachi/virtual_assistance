@@ -13,14 +13,12 @@ RUN npm install
 # Copy the rest of the application code to the working directory
 COPY . .
 
-# Copy the appropriate binaries based on the OS
-RUN if [ "$(uname -m)" = "x86_64" ]; then \
-      cp -r ./ffmpeg /usr/local/bin/ && \
-      cp -r ./rhubarb /usr/local/bin/; \
-    else \
-      cp -r ./ffmpeg-win /usr/local/bin/ && \
-      cp -r ./rhubarb-win /usr/local/bin/; \
-    fi
+# Copy the appropriate binaries based on the OS and set permissions
+COPY --chmod=755 ffmpeg /usr/local/bin/
+COPY --chmod=755 rhubarb /usr/local/bin/
+
+# Copy service-account.json to the working directory
+COPY service-account.json /app/
 
 # Expose the port your app runs on
 EXPOSE 3000
