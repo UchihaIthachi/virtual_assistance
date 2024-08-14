@@ -1,38 +1,38 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from "react";
 
-const backendUrl = 'https://virtualme-9c57113a97f2.herokuapp.com'
+const backendUrl = "https://virtualmedocker-9663054ae825.herokuapp.com";
 
-const ChatContext = createContext()
+const ChatContext = createContext();
 
 export const ChatProvider = ({ children }) => {
   const chat = async (message) => {
-    setLoading(true)
+    setLoading(true);
     const data = await fetch(`${backendUrl}/chat`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ message }),
-    })
-    const resp = (await data.json()).messages
-    setMessages((messages) => [...messages, ...resp])
-    setLoading(false)
-  }
-  const [messages, setMessages] = useState([])
-  const [message, setMessage] = useState()
-  const [loading, setLoading] = useState(false)
-  const [cameraZoomed, setCameraZoomed] = useState(true)
+    });
+    const resp = (await data.json()).messages;
+    setMessages((messages) => [...messages, ...resp]);
+    setLoading(false);
+  };
+  const [messages, setMessages] = useState([]);
+  const [message, setMessage] = useState();
+  const [loading, setLoading] = useState(false);
+  const [cameraZoomed, setCameraZoomed] = useState(true);
   const onMessagePlayed = () => {
-    setMessages((messages) => messages.slice(1))
-  }
+    setMessages((messages) => messages.slice(1));
+  };
 
   useEffect(() => {
     if (messages.length > 0) {
-      setMessage(messages[0])
+      setMessage(messages[0]);
     } else {
-      setMessage(null)
+      setMessage(null);
     }
-  }, [messages])
+  }, [messages]);
 
   return (
     <ChatContext.Provider
@@ -47,13 +47,13 @@ export const ChatProvider = ({ children }) => {
     >
       {children}
     </ChatContext.Provider>
-  )
-}
+  );
+};
 
 export const useChat = () => {
-  const context = useContext(ChatContext)
+  const context = useContext(ChatContext);
   if (!context) {
-    throw new Error('useChat must be used within a ChatProvider')
+    throw new Error("useChat must be used within a ChatProvider");
   }
-  return context
-}
+  return context;
+};

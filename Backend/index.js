@@ -277,12 +277,7 @@ const generateSpeech = async (textInput, index) => {
 
 // Determine OS and set the path to ffmpeg and rhubarb executable accordingly
 const isWindows = os.platform() === "win32";
-const ffmpegPath = isWindows
-  ? path.join(__dirname, "ffmpeg-win", "bin", "ffmpeg.exe")
-  : path.join(__dirname, "ffmpeg", "bin", "ffmpeg");
-const rhubarbPath = isWindows
-  ? path.join(__dirname, "rhubarb-win", "rhubarb.exe")
-  : path.join(__dirname, "rhubarb");
+const ffmpegPath = "ffmpeg";
 
 // Set the path to ffmpeg executable
 ffmpeg.setFfmpegPath(ffmpegPath);
