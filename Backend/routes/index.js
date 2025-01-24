@@ -1,14 +1,12 @@
-import express from "express";
-import chatRoutes from "./chatRoutes.js"; // Adjust the path if necessary
+import { Router } from "express";
+import voiceRoutes from "./voiceRoutes.js";
+import chatRoutes from "./chatRoutes.js";
 
-const router = express.Router();
+const router = Router();
 
-// Example route
-router.get("/", (req, res) => {
-  res.send("API is working!");
-});
-
-// Add specific route groups
-router.use("/chat", chatRoutes); // Ensure chatRoutes.js exists
+// Add route handlers
+router.use("/", (req, res) => res.send("Hello World!"));
+router.use("/voices", voiceRoutes);
+router.use("/chat", chatRoutes);
 
 export default router;

@@ -1,17 +1,24 @@
-// import express from "express";
-// import cors from "cors";
-// import { config } from "./config/dotenvConfig.js";
-// import routes from "./routes/index.js";
+// Import dependencies
+import express from "express";
+import cors from "cors";
+import { config } from "./config/dotenvConfig.js"; // Environment config
+import routes from "./routes/index.js"; // Centralized route management
 
-// const app = express();
+// Initialize Express app
+const app = express();
 
-// app.use(cors());
-// app.use(express.json());
-// app.use(routes);
+// Middleware
+app.use(cors());
+app.use(express.json());
 
-// app.listen(config.port, () => {
-//   console.log(`Server running on port ${config.port}`);
-// });
+// Routes
+app.use(routes);
+
+// Start server
+app.listen(config.port, () => {
+  console.log(`Server running on port ${config.port}`);
+});
+
 
 import cors from "cors";
 import dotenv from "dotenv";

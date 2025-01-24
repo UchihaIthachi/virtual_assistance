@@ -1,10 +1,11 @@
 {
-  "name": "dd-backend",
+  "name": "virtual-harshana-backend",
   "version": "1.0.0",
   "description": "Backend for the digital doppelganger app",
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "prestart": "node setPermissions.js",
     "start": "node index.js",
     "dev": "nodemon index.js --ext js"
   },
