@@ -47,21 +47,23 @@ export const chatHandler = async (req, res) => {
     }
 
     // Get model response
-    const rasaResponse = await getModelResponse(userMessage, conversationHistory);
+    const Response = await getModelResponse(userMessage, conversationHistory);
 
     // Process responses
     const messages = await Promise.all(
-      rasaResponse.map(async (rasaMessage, index) => {
-        const emotion = await getEmotion(rasaMessage.text);
+      Response.map(async (Message, index) => {
+        const emotion = await getEmotion(Message.text);
         return {
-          text: rasaMessage.text,
-          facialExpression: FACIAL_EXPRESSIONS[emotion] || "default",
+          text: Message.text,
+          // facialExpression: FACIAL_EXPRESSIONS[emotion] || "default",
+          facialExpression:"angry",
           animation: ANIMATIONS[emotion] || "idle",
-          audio: await generateSpeech(rasaMessage.text, index),
+          audio: await generateSpeech(Message.text, index),
           lipsync: await lipSyncMessage(index),
         };
       })
     );
+    console.log("messge : ",messages)
 
     res.send({ messages });
   } catch (error) {

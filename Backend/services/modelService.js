@@ -8,6 +8,8 @@ export const getModelResponse = async (userMessage, history) => {
     const prompt = buildPrompt(details, history, userMessage);
     const response = await callHuggingFaceApi(prompt);
 
+    console.log("Model response: ",response);
+
     if (response.length > 0 && response[0].generated_text) {
       let responseText = response[0].generated_text
         .split("\n")

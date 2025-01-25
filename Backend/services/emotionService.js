@@ -8,6 +8,7 @@ export const getEmotion = async (text) => {
   
     try {
       const firstSentence = text.split(/[.]/)[0];
+      console.log("Text: ",text);
       console.log("First sentence:", firstSentence);
   
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
