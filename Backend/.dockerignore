@@ -1,0 +1,47 @@
+# Node modules
+node_modules
+npm-debug.log
+
+# Logs
+logs
+*.log
+*.pid
+*.pid.lock
+
+# Runtime data
+pids
+*.seed
+*.key
+
+# Local development directories
+.env
+.DS_Store
+.idea
+.vscode
+.vagrant
+coverage
+
+# Build directories
+dist
+build
+.cache
+output
+
+# Temporary files and directories
+tmp
+temp
+*.swp
+*.bak
+*.tmp
+*.old
+*.orig
+
+# Ignore audio and other large files unless necessary
+audios/
+*.wav
+*.mp3
+*.ogg
+
+# # Rhubarb and FFmpeg binaries if already set up in Docker
+rhubarb-win/
+ffmpeg-win/
