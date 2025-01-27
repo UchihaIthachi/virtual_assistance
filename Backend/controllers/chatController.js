@@ -55,15 +55,15 @@ export const chatHandler = async (req, res) => {
         const emotion = await getEmotion(Message.text);
         return {
           text: Message.text,
-          // facialExpression: FACIAL_EXPRESSIONS[emotion] || "default",
-          facialExpression:"angry",
+          facialExpression: FACIAL_EXPRESSIONS[emotion] || "default",
+          // facialExpression:"angry",
           animation: ANIMATIONS[emotion] || "idle",
           audio: await generateSpeech(Message.text, index),
           lipsync: await lipSyncMessage(index),
         };
       })
     );
-    console.log("messge : ",messages)
+    console.log("messge : ",messages.text)
 
     res.send({ messages });
   } catch (error) {

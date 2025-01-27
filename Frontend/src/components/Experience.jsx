@@ -154,7 +154,7 @@ export const Experience = () => {
     <>
       <CameraControls ref={cameraControls} />
       <DynamicSky />
-      {/* <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} /> */}
+      {/* <Stcars radius={100} depth={50} count={5000} factor={4} saturation={0} /> */}
       <directionalLight castShadow position={[10, 10, 10]} intensity={1} />
       <Environment preset="park" />
       <Suspense fallback={<Html>Loading...</Html>}>
