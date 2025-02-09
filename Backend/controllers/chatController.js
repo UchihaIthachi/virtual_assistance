@@ -72,8 +72,8 @@ export const chatHandler = async (req, res) => {
     // Fallback response
     const fallbackMessage = {
       text: "Sorry I'm a dumbo!",
-      audio: await convertAudioToBase64("../audios/dumbo.wav"),
-      lipsync: await readJsonTranscript("../audios/dumbo.json"),
+      audio: await convertAudioToBase64("./audios/dumbo.wav"),
+      lipsync: await readJsonTranscript("./audios/dumbo.json"),
       facialExpression: Math.random() < 0.5 ? "funnyFace" : "default",
       animation: "dance",
     };

@@ -1,5 +1,7 @@
 # Dependency directories
 node_modules/
+Backend/node_modules/
+Frontend/node_modules/
 
 # Production build directory
 build/

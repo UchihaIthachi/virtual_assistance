@@ -1,0 +1,37 @@
+Harshana Lakshara Fernando  
+Software Engineer  
+Skills:  
+- Programming Languages: C, C++, Java, Python, JavaScript, TypeScript, SQL  
+- Frameworks: ReactJS, NodeJS, Angular, Rasa, TailwindCSS, Prisma  
+- Databases: PostgreSQL, MySQL, Supabase, Firebase  
+- Tools: Git, Docker, Kubernetes, Netlify, Google Cloud, OpenAI  
+
+Education:  
+BSc (HONS) Computer Science and Engineering  
+University of Moratuwa (2021 - Present)  
+
+Projects:  
+1. **Rpal Interpreter**  
+   Developed a compiler interpreter showcasing advanced knowledge of core computer science topics like automata, data structures, and parsing techniques.
+
+2. **Hotel Assistant Chatbot**  
+   Built a real-time chatbot using Rasa to handle hotel booking queries efficiently with NLP.
+
+3. **Virtual Hotel Assistant**  
+   Integrated 3D animation with dynamic user interaction using AI and Eleven Labs TTS.
+
+4. **Integrated Hotel Management System (Opal System)**  
+   Designed a seamless hotel management system featuring Google OAuth for authentication and Supabase for backend storage.
+
+Certificates:  
+- Python Essential  
+
+Interests:  
+- Generative AI  
+- DevOps and CI/CD  
+- Machine Learning Ops (MLOps)  
+- Cloud-native development  
+
+Contact:  
+- Phone: +94 783310520  
+- Location: Panadura, Sri Lanka
